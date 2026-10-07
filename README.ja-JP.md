@@ -1,24 +1,30 @@
-# Read Pico 公式デモファームウェア
+# Read Pico リーディングファームウェア · Read
 
 **言語:** [English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja-JP.md)
 
 [貢献ガイド](CONTRIBUTING.md) · [サポート](SUPPORT.md) · [セキュリティ](SECURITY.md) · [行動規範](CODE_OF_CONDUCT.md)
 
-[![License](https://img.shields.io/github/license/MindReset/read_pico_firmware?style=for-the-badge&logo=apache&logoColor=white)](LICENSE)
-[![Build](https://img.shields.io/github/actions/workflow/status/MindReset/read_pico_firmware/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/MindReset/read_pico_firmware/actions)
+[![License](https://img.shields.io/github/license/leo123d/read-firmware?style=for-the-badge&logo=apache&logoColor=white)](LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/leo123d/read-firmware/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/leo123d/read-firmware/actions)
 ![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v6.1-E7352C?style=for-the-badge&logo=espressif&logoColor=white)
 ![Target](https://img.shields.io/badge/target-ESP32--S3-E7352C?style=for-the-badge&logo=espressif&logoColor=white)
 
-Read Pico は、Read シリーズの開発ボードです。ESP32-S3 と 4.7 インチのモノクロ電子ペーパーディスプレイを搭載しています。
-Shenzhen MindReset Technology Co., Ltd. が、電子ペーパー向けのオープンソースファームウェアを
-開発する方に向けて提供しています。このリポジトリには、ボードに出荷時から搭載されるファームウェアが含まれています。
+Read Pico は、Read シリーズの開発ボードです。ESP32-S3 と 4.7 インチのモノクロ電子ペーパーディスプレイを搭載し、
+Shenzhen MindReset Technology Co., Ltd. が提供しています。このリポジトリは、
+[公式デモファームウェア](https://github.com/MindReset/read_pico_firmware)を**読書専用**に絞り込んだビルドです。
 
-ディスプレイ、タッチ、加速度センサー、電源、キー、TF カード、フォント、スリープと復帰の
-デモ画面と診断画面を個別に用意しています。ハードウェアの動作確認や、独自ファームウェアを
-開発する際のリフレッシュ制御、電力管理、操作方法の参考として利用できます。
+起動すると本棚が直接開きます。メニューは 本棚 / 転送 / フォント / ストレージ / 設定 の 5 項目です。
+ハードウェアを個別に確認するためのデモ画面と診断画面（概要、リフレッシュ、読書デモ、タッチ、
+加速度センサー、電源とバッテリー、PMU プロトコル、電源キー、スリープ、TF カードとブザー、拡張端子）は
+ソースから削除しました。デバイス自己診断はメニューから外れ、起動時の電源断リジューム、
+または設定画面で「About」見出しを長押ししたときだけ開きます。
 
 ボードサポート、PMU プロトコルのホスト実装、各チップのドライバーは独立したコンポーネントとして
-再利用できます。本ファームウェアはハードウェアのデモであり、完成した電子書籍リーダーではありません。
+再利用できます。WebSerial によるブラウザ書き込みは [webflash/](webflash/)、
+ソースからのビルドは下記のとおりです。
+
+AI エージェント向けの構成、`app_desc_t` 契約、用語集、コメント規約は
+[AGENTS.md](AGENTS.md) を参照してください。
 
 AI エージェント向けのディレクトリ構成、`app_desc_t` の仕様、用語集、コメント規約は
 [AGENTS.md](AGENTS.md) を参照してください。
@@ -72,22 +78,14 @@ CI は `sdkconfig.ci` の標準タイミングを使い、コンパイルでき�
 
 | 画面 | 内容 |
 | --- | --- |
-| 概要 | 起動時の I2C スキャン、識別情報、バッテリーと充電状態、ビルド日時 |
-| 電子ペーパー更新 | 全画面 GC16、部分 DU、16 階調と高速 8 階調のグラデーション。各更新の実測時間を表示 |
-| 読書テスト | 内蔵テキスト、DU / GL16 / GC16 によるページ送り、ヘッダーでの文字サイズ調整 |
-| タッチ | 連続 DU による 2 点追従、指を離した後の全画面更新、ディープスリープと自動復帰 |
-| 加速度センサー | リアルタイムの 3 軸値と傾き、タップ回数、向き検出 |
-| 加速度センサー診断 | サンプリング設定とセルフテスト |
-| 電源とバッテリー | バッテリー電圧、残量、充電状態。電子ペーパーの電源レール、温度、異常、読み取り専用の SY7636A 設定 |
-| PMU プロトコル | プロトコルの状態、イベント、設定、コマンド |
-| 電源キー | `key_raw_events`、押下・解放時のレベル、DOWN/UP/SHORT/LONG イベント |
-| スリープと復帰 | ライトスリープ（キー操作または持ち上げで復帰）、ディープスリープ、電源オフ |
-| TF カードとブザー | カード容量とマウント状態、再マウント、フォーマット、ブザー |
-| フォント | カード内の TTF の一覧と切り替え、組版プレビュー、ウェイトの順次切り替え |
-| IO 拡張 | Port-0 のレベルと割り込み、下部バーからのタッチリセットパルス |
-| デバイス機能テスト | デバイスの応答確認とコマンド ACK。電源断を伴う項目はバックエンドにのみ結果を記録 |
-| 図書 | TF カードまたは内蔵ストレージの UTF-8 / GBK TXT と EPUB、目次、文字サイズ、本ごとの読書位置。左右スワイプでページ送り、本文の長押しで目次、本棚項目の長押しで詳細表示、読書位置の消去、確認付き削除。保存先フィルター、名前・最近読んだ順の並べ替え、ピンイン・頭文字・英語での検索に対応。単独操作はポップアップ、管理ページは複数選択、読書位置の消去・削除、再スキャンに対応。振って次ページへ進む実験機能は既定で無効。EPUB は NCX と nav の目次に対応。 |
+| 図書 | TF カードまたは内蔵ストレージの UTF-8 / GBK TXT と EPUB、目次、文字サイズ、本ごとの読書位置。左右スワイプでページ送り、本文の長押しで目次、本棚項目の長押しで詳細表示、読書位置の消去、確認付き削除。保存先フィルター、名前・最近読んだ順の並べ替え、ピンイン・頭文字・英語での検索に対応。単独操作はポップアップ、管理ページは複数選択、読書位置の消去・削除、再スキャンに対応。振って次ページへ進む実験機能は既定で無効。EPUB は NCX と nav の目次に対応。**起動時の既定画面。** |
 | 転送 | 端末のホットスポットまたは既存の WiFi に接続し、ブラウザーで TXT/EPUB を転送。TF カードへの完全な TTF フォントのアップロードにも対応。QR コードでホットスポットに接続できます。既存の 2.4 GHz WiFi はタッチ画面で選択し、パスワードを入力できます。Web 設定も利用可能です。TF カードを優先し、内蔵ストレージは1ファイル1 MBまで。ブラウザーでは現在の転送先の本を一覧・検索し、置換・削除を確認できます。転送のキャンセル・再試行と端末での保存済みWiFiの削除にも対応。ページを離れると停止。 |
+| フォント | カード内の TTF の一覧と切り替え、組版プレビュー、ウェイトの順次切り替え |
+| ストレージ | カード容量とマウント状態、再読み込み（再マウント）、フォーマット（2 回確認、カードを消去）。カードが使えなくなったときの復旧入口 |
+| 設定 | 読書設定（既定文字サイズ 36–72、振ってページ送り）、スリープと復帰（ライト / ディープ / 電源オフ、持ち上げ復帰）、About（バッテリーと充電、ビルド UTC 日時、空き容量）。「About」見出しの長押しでデバイス自己診断を開く |
+
+デバイス自己診断と工場出荷時の VCOM 校正はメニューには出しません。自己診断は起動時の電源断リジューム、
+または設定画面で「About」見出しを長押ししたときだけ開きます。VCOM が未校正のときは起動時に校正画面へ進みます。
 
 図書の KEY1 / KEY2 / KEY3 は前ページ / ツールバー / 次ページです。ツールバーには全画面更新があります。中央キーを500 ms長押しするとデモメニューを開けます。他のページでは KEY2 の全画面 GC16 更新と KEY3 のメニューを維持します。メニュー項目は指を離すと確定し、外へ滑らせるとキャンセルします。
 

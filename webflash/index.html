@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>小纸 Pico 阅读固件 · 网页烧录</title>
+<meta name="description" content="在浏览器里通过 WebSerial 给小纸 Pico（Read Pico）烧录阅读固件，支持桌面版 Chrome 和 Edge。" />
+<style>
+  :root {
+    --bg: #f6f5f2;
+    --card: #ffffff;
+    --ink: #1c1b19;
+    --muted: #6b6a66;
+    --line: #e3e1db;
+    --accent: #1f6f5c;
+    --accent-ink: #0f3f34;
+    --warn-bg: #fdf3e3;
+    --warn-line: #e6cfa5;
+    --warn-ink: #6b4a12;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 48px 20px 72px; }
+  header h1 { font-size: 26px; font-weight: 600; margin: 0 0 8px; letter-spacing: .2px; }
+  header p { color: var(--muted); margin: 0 0 28px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 18px;
+  }
+  .card h2 { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+  .card .sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+  .device {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border: 1px solid var(--line);
+    border-radius: 10px; background: #fbfaf8; margin-bottom: 20px;
+  }
+  .device .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex: none; }
+  .device b { font-weight: 600; }
+  .device span { color: var(--muted); font-size: 14px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  esp-web-install-button { --esp-tools-button-color: var(--accent); }
+  .note {
+    background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-ink);
+    border-radius: 10px; padding: 14px 16px; font-size: 14px;
+  }
+  .note b { font-weight: 600; }
+  ul { margin: 10px 0 0; padding-left: 20px; color: var(--muted); font-size: 14px; }
+  li { margin: 4px 0; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: #f1efea; border: 1px solid var(--line); border-radius: 6px;
+    padding: 1px 6px; font-size: 13px;
+  }
+  pre {
+    background: #f1efea; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.5;
+  }
+  pre code { background: none; border: 0; padding: 0; }
+  a { color: var(--accent); }
+  footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 32px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>小纸 Pico 阅读固件 · 网页烧录</h1>
+    <p>通过 WebSerial 在浏览器里直接写入固件，无需安装工具链。</p>
+  </header>
+
+  <div class="card">
+    <div class="device">
+      <span class="dot"></span>
+      <div>
+        <b>MindReset Read Pico</b><br />
+        <span>ESP32-S3 · 4.7" 墨水屏 684 × 1216</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+    </div>
+
+    <ul>
+      <li>请使用桌面版 <b>Chrome</b> 或 <b>Edge</b>（需要 WebSerial）。</li>
+      <li>用 USB 数据线连接开发板，然后点击上面的按钮。</li>
+      <li>烧录会<b>擦除整片 flash</b>（阅读进度、WiFi 凭据会清空；VCOM 存在 PMU，不受影响）。</li>
+      <li>本板没有 BOOT / RESET 按键，烧录流程会自动进入下载模式。</li>
+      <li>烧录完成后设备自动重启，直接进入书架。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>手动烧录</h2>
+    <p class="sub">不想用浏览器，或者需要批量烧写时，可以下载合并镜像用 esptool 写入。</p>
+    <div class="note">
+      <b>合并镜像：</b><a href="firmware/Read_Pico-merged.bin" download>Read_Pico-merged.bin</a>
+      —— 从 <code>0x0</code> 一次写入（含 bootloader、分区表、应用）。
+    </div>
+    <pre><code>python -m esptool --chip esp32s3 -p COMx -b 460800 \
+  --before default-reset --after hard-reset \
+  write-flash 0x0 Read_Pico-merged.bin</code></pre>
+    <p class="sub" style="margin-top:14px">
+      也可以按下面的分区地址逐段烧写：
+      bootloader <code>0x0</code> · 分区表 <code>0x8000</code> · 应用 <code>0x10000</code>。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>烧录前准备</h2>
+    <p class="sub">这是纯阅读固件，阅读外部中文书需要一张 TF 卡。</p>
+    <ul>
+      <li>准备一张 FAT32 的 TF 卡，插入开发板。</li>
+      <li>把 TXT / EPUB 放进去，或开机后用「传书」页通过 WiFi 上传。</li>
+      <li>阅读中文书需要完整中文 TTF，放到卡上 <code>fonts/</code> 目录后在「字体」页选用。</li>
+    </ul>
+  </div>
+
+  <footer>
+    基于 <a href="https://github.com/MindReset/read_pico_firmware">MindReset/read_pico_firmware</a> 裁剪的阅读版固件 · Apache-2.0
+  </footer>
+</div>
+
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+</body>
+</html>

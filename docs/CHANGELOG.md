@@ -3,6 +3,19 @@
 按日期和作者简述对用户可见的功能变化；详细实现历史见 Git。使用方法见 [README](../README.zh-CN.md)。
 User-visible changes by date and author; Git retains implementation history. See [README](../README.md) for usage.
 
+## 2026-10-07 · leo123d
+
+- 定位：本仓库改为**纯阅读固件**（阅读版 / Read），只服务阅读。开机直接进书架，不再进演示菜单。
+  Scope: this repository becomes the **reading-only firmware** (阅读版 / Read). It boots straight into the shelf instead of the demo menu.
+- 菜单：由 16 项演示页收敛为 5 项阅读菜单——书架 / 传书 / 字体 / 存储 / 设置。
+  Menu: the 16 demo pages collapse into a 5-item reading menu — Books / Transfer / Font / Storage / Settings.
+- 移除：概览、墨水屏刷新、阅读测试、触摸、加速度计、电源与电池、电源管理协议、电源按键、睡眠与唤醒、TF 卡与蜂鸣器、扩展口等演示与诊断页源码已删除。
+  Removed: the overview, refresh bench, reading demo, touch, accelerometer, power/battery, PMU protocol, power key, sleep, TF card & buzzer and expander demo pages are deleted.
+- 新增：存储页（卡状态 / 重新读取 / 格式化，去掉了蜂鸣器与探针）与设置页（默认字号、晃动翻页、锁屏模式、拿起唤醒、电池 / 构建时间 / 存储余量）。
+  Added: a Storage page (card status / remount / format, without the buzzer and probes) and a Settings page (default size, shake turn, lock mode, pickup wake, battery / build time / free storage).
+- 隐藏：设备功能自检不再出现在菜单，只由开机断电续跑与设置页长按「关于」标题进入；出厂 VCOM 标定页保持不变。
+  Hidden: the device self-test leaves the menu and is reached only by the boot power-cut resume and a long press on the About heading in Settings; the factory VCOM setup page is unchanged.
+
 ## 2026-09-28 · UNSaWEN
 
 - 阅读：进入书架先确认是否续读；ZIP目录连续读取、字宽测量不生成位图，当前章先排起始/续读页，其余分页分批补齐。

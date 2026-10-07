@@ -57,29 +57,20 @@ Deliver implementation, reproducible tests, feature documentation and necessary 
 计划、检查点、过程审查、验收结果和调试日志在 `docs/local/` 或被忽略的构建目录内部闭环，不加入提交。长期有效的行为与限制整理进对应功能文档，不要求读者查内部计划。只有需要交接未完功能或责任时才按 `docs/HANDOFF.md` 提供最小必要摘要；本机账本仍不入库。
 Keep plans, checkpoints, review records, acceptance results and debug logs in ignored `docs/local/` or build directories. Put lasting behavior and limits in feature documentation without dependencies on internal plans. Use `docs/HANDOFF.md` for the minimal necessary handoff of unfinished work or responsibility; the local ledger remains untracked.
 
-### demo 页 / Demo pages
+### 页面 / Pages
 
-每个文件只导出 `app_desc_t`。顺序与 `app_registry.c` 一致。
+每个文件只导出 `app_desc_t`。顺序与 `app_registry.c` 一致。本版为纯阅读固件，演示与诊断页已删除。
 
-One file, one `app_desc_t`. Order matches `app_registry.c`.
+One file, one `app_desc_t`. Order matches `app_registry.c`. This build is reading-only; the demo and diagnostic pages are removed.
 
-| 文件 / File | 演示 / Demo | 依赖 / Depends on |
+| 文件 / File | 页面 / Page | 依赖 / Depends on |
 | --- | --- | --- |
-| `app_home.c` | 概览：I2C 普查、识别码、电池、构建时间。/ Overview. | `read_pico`, `read_pico_pmu` |
-| `app_refresh.c` | GC16 / DU / 灰阶梯子与耗时。/ Refresh matrix. | `epdiy`, `e0470_epaper_waveform` |
-| `app_reading.c` | 内置正文翻页。/ Reading demo. | `ttf_font` |
-| `app_touch.c` | 两点跟手连续 DU、深睡唤醒。/ Touch + continuous DU. | `cst836u`, `continuous_du` |
-| `app_axis.c` | 读数页 Live/Tap/Orient 与诊断页 Setup/Event/FIFO/Test。/ IMU pages. | `sc7a20h` |
-| `app_power.c` | 电池与 SY7636A 只读。/ Battery + rails. | `read_pico_pmu`, `sy7636a` |
-| `app_pmu.c` | CW32 协议五视图。/ Protocol views. | `read_pico_pmu` |
-| `app_key.c` | 电源键原始事件。/ Power-key events. | `read_pico_pmu` |
-| `app_sleep.c` | 浅睡 / 深睡 / 关机。/ Sleep modes. | `sleep`, `read_pico_pmu`, `sc7a20h` |
-| `app_sd.c` | TF 卡与蜂鸣器。/ Card + buzzer. | `read_pico_sd`, `read_pico_buzzer` |
-| `app_font_pick.c` | 卡上 TTF 列表与字重。/ Font picker. | `ttf_font` |
-| `app_ioe.c` | FCA9555 Port-0。/ Expander pins. | `fca9555` |
-| `app_selftest.c` | 设备功能自检入口。/ Device self-test UI. | `pmu_selftest` |
-| `app_book.c` | TXT / EPUB 书架、目录、字号与逐书进度；晃动翻页实验默认关。/ TXT / EPUB shelf, TOC, size and per-book progress; experimental shake defaults off. | `book_*`, `ttf_font` |
+| `app_book.c` | 书架 / 阅读器；开机默认页。/ Shelf and reader; boot page. | `book_*`, `ttf_font`, `read_pico_search` |
 | `app_transfer.c` | 设备热点/已有 WiFi 传 TXT/EPUB 与 TF 卡 TTF 字体，触屏/网页配网与热点二维码，离页停止；停止按钮返回进入前的位置。/ AP/STA book and TF font upload with touchscreen/web provisioning and hotspot QR; stops and returns to the entry origin. | `read_pico_transfer`, `book_store` |
+| `app_font_pick.c` | 卡上 TTF 列表与字重。/ Font picker. | `ttf_font` |
+| `app_storage.c` | 卡状态、重新读取、格式化（两次确认）。阅读版的卡自救入口，无蜂鸣器与探针。/ Card status, remount and format (two confirmations); the reading build's card self-rescue entry, without the buzzer and probes. | `read_pico_sd`, `ttf_font` |
+| `app_settings.c` | 阅读偏好、睡眠与唤醒、关于；长按「关于」标题进入自检。/ Reading prefs, sleep and wake, about; a long press on the About heading opens the self-test. | `settings`, `read_pico_pmu`, `read_pico_sd`, `sleep` |
+| `app_selftest.c` | 设备功能自检；不在菜单里，只由开机断电续跑与设置页长按进入。/ Device self-test; out of the menu, reached by the boot power-cut resume and the Settings long press. | `pmu_selftest` |
 
 加页：在 `main/apps/` 新建文件，实现需要的回调，把它加入 `app_registry.c` 的 `s_apps[]`。不要改 `app_loop.c`。
 

@@ -1,24 +1,29 @@
-# Read Pico Demo Firmware
+# Read Pico Reading Firmware · Read
 
 **Languages:** [English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja-JP.md)
 
 [Contributing](CONTRIBUTING.md) · [Support](SUPPORT.md) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
-[![License](https://img.shields.io/github/license/MindReset/read_pico_firmware?style=for-the-badge&logo=apache&logoColor=white)](LICENSE)
-[![Build](https://img.shields.io/github/actions/workflow/status/MindReset/read_pico_firmware/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/MindReset/read_pico_firmware/actions)
+[![License](https://img.shields.io/github/license/leo123d/read-firmware?style=for-the-badge&logo=apache&logoColor=white)](LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/leo123d/read-firmware/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/leo123d/read-firmware/actions)
 ![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v6.1-E7352C?style=for-the-badge&logo=espressif&logoColor=white)
 ![Target](https://img.shields.io/badge/target-ESP32--S3-E7352C?style=for-the-badge&logo=espressif&logoColor=white)
 
 Read Pico is an ESP32-S3 development board in the Read series with a 4.7" monochrome e-paper panel,
-made by Shenzhen MindReset Technology Co., Ltd. for developers building open-source
-e-paper firmware. This repository contains the factory firmware shipped with the board.
+made by Shenzhen MindReset Technology Co., Ltd. This repository trims the
+[factory demo firmware](https://github.com/MindReset/read_pico_firmware) down to a
+**reading-only** build.
 
-The firmware provides separate demo and diagnostic pages for the display, touch,
-accelerometer, power, keys, TF card, fonts, sleep and wake. Use them to check the
-hardware and as reference implementations for your own firmware.
+It boots straight into the shelf. The menu has five entries: Books / Transfer / Font /
+Storage / Settings. The demo and diagnostic pages used to check the hardware piece by
+piece (overview, refresh bench, reading demo, touch, accelerometer, power and battery,
+PMU protocol, power key, sleep, TF card and buzzer, expander) are removed from the
+source. The device self-test leaves the menu and opens only from the boot power-cut
+resume or a long press on the About heading in Settings.
 
-The board support, PMU protocol host and chip drivers are independent components
-that can be reused. This is a hardware demo, not a finished reader product.
+Board support, PMU protocol host and chip drivers remain independent, reusable
+components. Browser flashing over WebSerial lives in [webflash/](webflash/); you can
+also build from source as below.
 
 Agent-facing layout, `app_desc_t` contract, glossary and comment style are in
 [AGENTS.md](AGENTS.md).
@@ -75,24 +80,17 @@ The function menu lists pages in the order defined in
 
 | Page | Content |
 | --- | --- |
-| Overview | Boot I2C scan, IDs, battery and charging status, build time |
-| EPD Refresh | Full-screen GC16, partial DU, 16-gray and fast 8-gray ladders, each with measured refresh time |
-| Reading | Built-in text, DU / GL16 / GC16 page turns, font size adjustment in the header |
-| Touch | Two-point tracking with continuous DU, full-page settle on lift, deep sleep and automatic wake |
-| Accel | Live three-axis readings and tilt, tap count, orientation |
-| IMU Lab | Sampling parameters and self-test |
-| Power | Battery voltage, level and charging status; EPD rails, temperature, faults and read-only SY7636A configuration |
-| PMU | Protocol status, events, configuration and commands |
-| Power Key | `key_raw_events`, press/release levels and DOWN/UP/SHORT/LONG events |
-| Sleep | Light sleep with key or pickup wake, deep sleep and power off |
-| Storage | TF card capacity and mount status, remount, format and buzzer |
-| Font | Select TTF files from the card, preview typesetting and cycle font weight |
-| IOE | Port-0 levels and interrupts, touch-reset pulse from the bottom bar |
-| Device | Device probes and command ACKs; power-cut items are recorded in the backend only |
-| Books | UTF-8 / GBK TXT and EPUB from TF or internal storage, chapters, font size and per-book progress; swipe to turn, hold text for TOC and hold a shelf row for details, progress reset or confirmed deletion; filter storage sources, sort by name or recent reading, and search by pinyin, initials or English; single-book actions use a popup, while management supports batch selection, progress reset/deletion and rescan; experimental shake-to-turn defaults off. EPUB navigation supports NCX and nav documents. |
+| Books | UTF-8 / GBK TXT and EPUB from TF or internal storage, chapters, font size and per-book progress; swipe to turn, hold text for TOC and hold a shelf row for details, progress reset or confirmed deletion; filter storage sources, sort by name or recent reading, and search by pinyin, initials or English; single-book actions use a popup, while management supports batch selection, progress reset/deletion and rescan; experimental shake-to-turn defaults off. EPUB navigation supports NCX and nav documents. **Boot page.** |
 | Transfer | Device hotspot or existing WiFi, with browser TXT/EPUB upload and complete TTF font uploads to TF; TF card preferred, internal storage limited to 1 MB per file. Scan the hotspot QR to join, or select a 2.4 GHz network and enter its password on the touchscreen. Web provisioning remains available. The browser lists and searches books in the current upload destination, confirms replacement or deletion, and supports upload cancellation and retry. Saved WiFi can be forgotten on the device. Leaving the page stops networking. |
+| Font | Select TTF files from the card, preview typesetting and cycle font weight |
+| Storage | TF card capacity and mount status, remount, and format (two confirmations, erases the card). The self-rescue entry after a card loss |
+| Settings | Reading prefs (default size 36–72, shake turn), sleep and wake (light / deep / off, pickup wake) and About (battery and charging, build UTC time, free storage). Hold the About heading to open the device self-test |
 
-In Books, KEY1 / KEY2 / KEY3 select previous page / toolbar / next page. The toolbar includes full refresh. Hold KEY2 for 500 ms to open the demo menu. Other pages retain KEY2 full GC16 refresh and KEY3 menu. Menu rows select on release; slide away to cancel.
+The device self-test and factory VCOM setup stay out of the menu: the self-test opens only
+from the boot power-cut resume or a long press on the About heading in Settings; when VCOM is
+unset the boot gates into the setup page.
+
+In Books, KEY1 / KEY2 / KEY3 select previous page / toolbar / next page. The toolbar includes full refresh. Hold KEY2 for 500 ms to open the menu. Other pages retain KEY2 full GC16 refresh and KEY3 menu. Menu rows select on release; slide away to cancel.
 
 ## Repository Layout
 

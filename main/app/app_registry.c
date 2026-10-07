@@ -2,48 +2,32 @@
  * SPDX-FileCopyrightText: 2026 mindreset
  * SPDX-License-Identifier: Apache-2.0
  *
- * 全部 demo 页的清单。菜单顺序。加页只改这张表。
+ * 全部页面的清单。菜单顺序。加页只改这张表。
+ * 本版为纯阅读固件：菜单只保留阅读相关页面，演示与诊断页已下线。
  *
- * Demo page table. Menu order lives here; adding a page only changes this list.
+ * Page table. Menu order lives here; adding a page only changes this list.
+ * This build is reading-only: the menu keeps reading pages only; demo and
+ * diagnostic pages are removed.
  */
 
 #include "app_registry.h"
 
-extern const app_desc_t app_home;
-extern const app_desc_t app_refresh;
-extern const app_desc_t app_reading;
-extern const app_desc_t app_touch;
-extern const app_desc_t app_axis;
-extern const app_desc_t app_axis_lab;
-extern const app_desc_t app_power;
-extern const app_desc_t app_pmu;
-extern const app_desc_t app_key;
-extern const app_desc_t app_sleep;
-extern const app_desc_t app_sd;
-extern const app_desc_t app_font_pick;
-extern const app_desc_t app_ioe;
-extern const app_desc_t app_selftest;
 extern const app_desc_t app_book;
 extern const app_desc_t app_transfer;
+extern const app_desc_t app_font_pick;
+extern const app_desc_t app_storage;
+extern const app_desc_t app_settings;
+// 出厂自检页：不在菜单里，只由开机断电续跑与设置页隐藏入口进入。
+// Factory self-test page: not in the menu; reached by the boot power-cut resume and a hidden entry in Settings.
+extern const app_desc_t app_selftest;
 
-// 一份菜单，相近的页挨着排，由 ui_menu 按页翻。/ One menu, similar pages together; ui_menu pages through it.
+// 阅读菜单：相近的页挨着排，由 ui_menu 按页翻。/ Reading menu; ui_menu pages through it.
 static const app_desc_t* const s_apps[] = {
-    &app_home,
-    &app_refresh,
-    &app_reading,
-    &app_touch,
-    &app_axis,
-    &app_axis_lab,
-    &app_power,
-    &app_pmu,
-    &app_key,
-    &app_sleep,
-    &app_sd,
-    &app_font_pick,
-    &app_ioe,
-    &app_selftest,
     &app_book,
     &app_transfer,
+    &app_font_pick,
+    &app_storage,
+    &app_settings,
 };
 
 #define APP_COUNT ((int)(sizeof(s_apps) / sizeof(s_apps[0])))
@@ -64,10 +48,13 @@ int app_index_of(const app_desc_t* app) {
     return -1;
 }
 
+// 开机首页：书架。app_loop 在 first_app 为空时也回退到这里。
+// Boot page: the shelf. app_loop also falls back here when first_app is empty.
 const app_desc_t* app_home_page(void) {
-    return &app_home;
+    return &app_book;
 }
 
+// 自检页只由开机断电续跑进入，不进菜单。/ The self-test page is boot-resume only and stays out of the menu.
 const app_desc_t* app_selftest_page(void) {
     return &app_selftest;
 }

@@ -1,0 +1,87 @@
+name: release
+
+# 用产品默认配置（sdkconfig.defaults）编译真机固件，产出可烧写的 bin，
+# 并把网页烧录器（webflash/）连同固件一起发布到 GitHub Pages。
+# Builds real-hardware firmware with the product defaults (sdkconfig.defaults),
+# then publishes the web flasher (webflash/) with the binaries to GitHub Pages.
+#
+# 编译回归（只用 sdkconfig.ci 验证能否编过）在 build.yml。
+# Compile-only regression (sdkconfig.ci) lives in build.yml.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # 钉在 v6.1 发布点，与 build.yml 一致。/ Pinned to v6.1, same as build.yml.
+    container: espressif/idf:v6.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: build
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          idf.py set-target esp32s3
+          idf.py build
+          idf.py merge-bin -o build/Read_Pico-merged.bin || echo "merge-bin skipped"
+
+      - name: size
+        shell: bash
+        run: |
+          . $IDF_PATH/export.sh
+          idf.py size
+
+      - name: assemble site
+        shell: bash
+        run: |
+          mkdir -p site/firmware
+          cp webflash/index.html site/
+          cp webflash/manifest.json site/
+          cp build/bootloader/bootloader.bin site/firmware/
+          cp build/partition_table/partition-table.bin site/firmware/
+          cp build/Read_Pico.bin site/firmware/
+          if [ -f build/Read_Pico-merged.bin ]; then
+            cp build/Read_Pico-merged.bin site/firmware/
+          else
+            echo "no merged bin; manual flashing section will 404"
+          fi
+          ls -l site site/firmware
+
+      - name: upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: read-pico-firmware
+          path: |
+            build/bootloader/bootloader.bin
+            build/partition_table/partition-table.bin
+            build/Read_Pico.bin
+            build/Read_Pico-merged.bin
+          if-no-files-found: warn
+
+      - name: upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
