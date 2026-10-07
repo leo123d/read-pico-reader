@@ -4,8 +4,8 @@
 
 [貢献ガイド](CONTRIBUTING.md) · [サポート](SUPPORT.md) · [セキュリティ](SECURITY.md) · [行動規範](CODE_OF_CONDUCT.md)
 
-[![License](https://img.shields.io/github/license/leo123d/read-firmware?style=for-the-badge&logo=apache&logoColor=white)](LICENSE)
-[![Build](https://img.shields.io/github/actions/workflow/status/leo123d/read-firmware/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/leo123d/read-firmware/actions)
+[![License](https://img.shields.io/github/license/leo123d/read-pico-reader?style=for-the-badge&logo=apache&logoColor=white)](LICENSE)
+[![Build](https://img.shields.io/github/actions/workflow/status/leo123d/read-pico-reader/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/leo123d/read-pico-reader/actions)
 ![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v6.1-E7352C?style=for-the-badge&logo=espressif&logoColor=white)
 ![Target](https://img.shields.io/badge/target-ESP32--S3-E7352C?style=for-the-badge&logo=espressif&logoColor=white)
 
