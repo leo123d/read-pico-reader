@@ -336,7 +336,7 @@ static app_redraw_t provisioning_action(int id) {
                 s_selected.requires_password ? s_password : "");
             if (err == ESP_OK) { queue_network_start(READ_PICO_TRANSFER_MODE_STA); return APP_REDRAW_PAGE; }
             snprintf(s_network_message, sizeof(s_network_message), "%s", err == ESP_ERR_INVALID_ARG ?
-                     "密码须 8–63 字符或 64 位十六进制" : "保存失败，输入已保留，请重试");
+                     "密码须 8-63 字符或 64 位十六进制" : "保存失败，输入已保留，请重试");
         }
     }
     return APP_REDRAW_AREA;

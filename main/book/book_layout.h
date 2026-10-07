@@ -15,6 +15,20 @@
 #include "epdiy.h"
 #include "html_text.h"
 
+/// 行距百分比：行高 = 字号 × pct / 100。上下限与默认值。/ Line-height percent: line height = px * pct / 100. Bounds and default.
+#define BOOK_LAYOUT_LINE_PCT_MIN 110
+#define BOOK_LAYOUT_LINE_PCT_MAX 220
+#define BOOK_LAYOUT_LINE_PCT_DEFAULT 150
+/// 首行缩进字符数上限。/ Maximum first-line indent in characters.
+#define BOOK_LAYOUT_INDENT_MAX 4
+
+/// 设置后续排版使用的行距与首行缩进；越界值回落到默认。默认 150 与 0 与旧版排版逐字节一致。
+/// 缩进只作用于段首行，标题不缩进；调用方须在每次 begin/build 之前设置。
+/// Set the line-height percent and first-line indent for later pagination; out-of-range values fall back to the
+/// defaults. The defaults 150 and 0 reproduce the legacy layout byte for byte. Indent applies to the first line of
+/// a paragraph only and never to headings; set this before every begin/build call.
+void book_layout_set_style(uint8_t line_pct, uint8_t indent_chars);
+
 /// 重排借用文本；空文一页，失败清空布局，超过 4096 页返回 false。/ Borrow and paginate; empty text has one page, failure clears layout, over 4096 pages fails.
 bool book_layout_build(const char* utf8, size_t len, EpdRect rect, int px);
 /// 借用块表；标题字号加8，块间单换行；原文与块表须存活至free。/ Borrow blocks; headings add 8 px, with one newline between blocks; text and blocks must outlive layout.

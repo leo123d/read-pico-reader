@@ -2,10 +2,12 @@
  * SPDX-FileCopyrightText: 2026 mindreset
  * SPDX-License-Identifier: Apache-2.0
  *
- * NVS 里的用户设置：睡眠档、字体路径、上次唤醒/开机原因、拿起唤醒开关。
+ * NVS 里的用户设置：睡眠档、字体路径、上次唤醒/开机原因、拿起唤醒开关，
+ * 以及阅读字号、晃动翻页、行距、首行缩进与左右页边距。
  *
  * User settings in NVS: sleep mode, font path, last wake/boot reason,
- * pickup-wake switch.
+ * pickup-wake switch, plus reading size, shake turn, line height,
+ * first-line indent and side margin.
  */
 
 #pragma once
@@ -45,3 +47,15 @@ void app_settings_set_book_px(uint8_t px);
 bool app_settings_book_shake(void);
 /// 保存实验性晃动翻页开关。/ Persist the experimental shake page-turn switch.
 void app_settings_set_book_shake(bool on);
+/// 阅读行距百分比，110..220 步长 10，默认 150。/ Reading line-height percent, 110..220 in steps of 10, initially 150.
+uint8_t app_settings_book_line_pct(void);
+/// 无效行距恢复 150。/ Invalid line heights fall back to 150.
+void app_settings_set_book_line_pct(uint8_t pct);
+/// 阅读首行缩进字符数，0..4，默认 0。/ Reading first-line indent in characters, 0..4, initially 0.
+uint8_t app_settings_book_indent(void);
+/// 无效缩进恢复 0。/ Invalid indents fall back to 0.
+void app_settings_set_book_indent(uint8_t chars);
+/// 阅读左右页边距档位，0..3，每档 20px，默认 0。/ Reading side-margin step, 0..3 at 20 px each, initially 0.
+uint8_t app_settings_book_margin(void);
+/// 无效档位恢复 0。/ Invalid steps fall back to 0.
+void app_settings_set_book_margin(uint8_t step);

@@ -36,7 +36,11 @@ jobs:
           . $IDF_PATH/export.sh
           idf.py set-target esp32s3
           idf.py build
-          idf.py merge-bin -o build/Read_Pico-merged.bin || echo "merge-bin skipped"
+          # 注意：merge-bin 以 build/ 为工作目录，-o 的路径相对 build/ 解析。
+          # 写成 build/xxx.bin 会落到 build/build/xxx.bin，务必用裸文件名。
+          # NOTE: merge-bin runs with cwd=build/, so -o resolves relative to build/.
+          # Passing build/xxx.bin would land in build/build/xxx.bin — use a bare filename.
+          idf.py merge-bin -o Read_Pico-merged.bin
 
       - name: size
         shell: bash
@@ -47,18 +51,31 @@ jobs:
       - name: assemble site
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p site/firmware
           cp webflash/index.html site/
           cp webflash/manifest.json site/
           cp build/bootloader/bootloader.bin site/firmware/
           cp build/partition_table/partition-table.bin site/firmware/
           cp build/Read_Pico.bin site/firmware/
-          if [ -f build/Read_Pico-merged.bin ]; then
-            cp build/Read_Pico-merged.bin site/firmware/
-          else
-            echo "no merged bin; manual flashing section will 404"
-          fi
+          # 合并镜像必须存在：缺失说明 merge-bin 出错，直接失败而不是发出 404 链接。
+          # The merged image must exist: a missing file means merge-bin broke,
+          # so fail loudly instead of shipping a 404 link.
+          cp build/Read_Pico-merged.bin site/firmware/
           ls -l site site/firmware
+
+      - name: verify site
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in index.html manifest.json \
+                   firmware/bootloader.bin \
+                   firmware/partition-table.bin \
+                   firmware/Read_Pico.bin \
+                   firmware/Read_Pico-merged.bin; do
+            test -s "site/$f" || { echo "MISSING or empty: site/$f"; exit 1; }
+            echo "ok  $(du -h "site/$f" | cut -f1)  $f"
+          done
 
       - name: upload firmware artifact
         uses: actions/upload-artifact@v4
@@ -69,7 +86,7 @@ jobs:
             build/partition_table/partition-table.bin
             build/Read_Pico.bin
             build/Read_Pico-merged.bin
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: upload pages artifact
         uses: actions/upload-pages-artifact@v3

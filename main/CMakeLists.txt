@@ -39,6 +39,7 @@ idf_component_register(
         "apps/app_selftest.c"
         "book/book_store.c"
         "book/book_progress.c"
+        "book/book_stats.c"
         "book/book_source.c"
         "book/book_txt.c"
         "book/book_epub.c"

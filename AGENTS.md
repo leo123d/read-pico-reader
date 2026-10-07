@@ -36,6 +36,7 @@ idf.py build
 | `main/ui/` | `ui_kit` 排版常量与绘制原语；`ui_menu` 两层菜单。页面互不引用。/ Shared drawing; pages do not include each other. |
 | `main/font/` | stb_truetype 字形缓存。`fallback.h` 是生成位图，勿手改。/ Glyph cache. Do not edit `fallback.h` by hand. |
 | `main/factory/` | 设备功能自检与出厂 VCOM 标定。/ Device self-test and factory VCOM. |
+| `main/book/` | 图书解析与排版、进度、书签与阅读统计（后两者在 NVS）。`book_stats.*` 只被阅读器与设置页引用。/ Book parsing and layout, progress, bookmarks and reading stats (the last two in NVS). `book_stats.*` is referenced only by the reader and Settings. |
 | `main/display.*` `sleep.*` `settings.*` | 刷屏封装、睡眠/锁屏、NVS 设置。/ Present helpers, sleep/lock, NVS. |
 | `components/read_pico/` | 板级 BSP：I2C、EPD 板定义与扫描时序、TF 卡、蜂鸣器、flash HPM。/ Board BSP. |
 | `components/read_pico_search/` | 离线拼音/首字母/英文书名匹配，设备和网页共用；字表由工具生成。/ Shared offline pinyin, initials and English matching with a generated table. |
@@ -65,11 +66,11 @@ One file, one `app_desc_t`. Order matches `app_registry.c`. This build is readin
 
 | 文件 / File | 页面 / Page | 依赖 / Depends on |
 | --- | --- | --- |
-| `app_book.c` | 书架 / 阅读器；开机默认页。/ Shelf and reader; boot page. | `book_*`, `ttf_font`, `read_pico_search` |
+| `app_book.c` | 书架 / 阅读器；开机默认页。正文工具条含书签、字号与行距，书架详情显示书签与阅读统计。/ Shelf and reader; boot page. The reading toolbar carries bookmarks, size and line height; shelf details show bookmarks and reading stats. | `book_*`, `ttf_font`, `read_pico_search` |
 | `app_transfer.c` | 设备热点/已有 WiFi 传 TXT/EPUB 与 TF 卡 TTF 字体，触屏/网页配网与热点二维码，离页停止；停止按钮返回进入前的位置。/ AP/STA book and TF font upload with touchscreen/web provisioning and hotspot QR; stops and returns to the entry origin. | `read_pico_transfer`, `book_store` |
 | `app_font_pick.c` | 卡上 TTF 列表与字重。/ Font picker. | `ttf_font` |
 | `app_storage.c` | 卡状态、重新读取、格式化（两次确认）。阅读版的卡自救入口，无蜂鸣器与探针。/ Card status, remount and format (two confirmations); the reading build's card self-rescue entry, without the buzzer and probes. | `read_pico_sd`, `ttf_font` |
-| `app_settings.c` | 阅读偏好、睡眠与唤醒、关于；长按「关于」标题进入自检。/ Reading prefs, sleep and wake, about; a long press on the About heading opens the self-test. | `settings`, `read_pico_pmu`, `read_pico_sd`, `sleep` |
+| `app_settings.c` | 两页设置：阅读偏好（字号、行距、缩进、边距、晃动）与睡眠，关于与阅读统计；长按「关于」标题进入自检。/ Two settings pages: reading prefs (size, line height, indent, margin, shake) and sleep, then about and reading stats; a long press on the About heading opens the self-test. | `settings`, `book_stats`, `read_pico_pmu`, `read_pico_sd`, `sleep` |
 | `app_selftest.c` | 设备功能自检；不在菜单里，只由开机断电续跑与设置页长按进入。/ Device self-test; out of the menu, reached by the boot power-cut resume and the Settings long press. | `pmu_selftest` |
 
 加页：在 `main/apps/` 新建文件，实现需要的回调，把它加入 `app_registry.c` 的 `s_apps[]`。不要改 `app_loop.c`。

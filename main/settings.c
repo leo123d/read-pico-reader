@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * NVS 读写。打开失败就用深睡默认值，不擦除整个分区。
+ * 键覆盖睡眠档、字体、唤醒原因、拿起唤醒，以及阅读字号/晃动/行距/缩进/页边距。
  *
  * NVS load/store. A failed open keeps the deep-sleep default; the
- * partition is not erased.
+ * partition is not erased. Keys cover sleep mode, font, wake reason and
+ * pickup wake, plus reading size, shake turn, line height, indent and margin.
  */
 
 #include "settings.h"
@@ -25,6 +27,9 @@
 #define NVS_KEY_PICKUP "pickup"
 #define NVS_KEY_BOOK_PX "bk_px"
 #define NVS_KEY_BOOK_SHAKE "bk_shake"
+#define NVS_KEY_BOOK_LINE "bk_line"
+#define NVS_KEY_BOOK_INDENT "bk_ind"
+#define NVS_KEY_BOOK_MARGIN "bk_margin"
 #define FONT_PATH_MAX 160
 
 static app_sleep_mode_t s_sleep = APP_SLEEP_DEEP;
@@ -34,9 +39,24 @@ static uint8_t s_last_boot;
 static bool s_pickup_wake;
 static uint8_t s_book_px = 48;
 static bool s_book_shake;
+static uint8_t s_book_line_pct = 150;
+static uint8_t s_book_indent;
+static uint8_t s_book_margin;
 
 static uint8_t valid_book_px(uint8_t px) {
     return px >= 36 && px <= 72 && (px - 36) % 4 == 0 ? px : 48;
+}
+
+static uint8_t valid_book_line(uint8_t pct) {
+    return pct >= 110 && pct <= 220 && (pct - 110) % 10 == 0 ? pct : 150;
+}
+
+static uint8_t valid_book_indent(uint8_t chars) {
+    return chars <= 4 ? chars : 0;
+}
+
+static uint8_t valid_book_margin(uint8_t step) {
+    return step <= 3 ? step : 0;
 }
 
 void app_settings_init(void) {
@@ -69,6 +89,10 @@ void app_settings_init(void) {
     uint8_t book_px = 48, book_shake = 0;
     if (nvs_get_u8(h, NVS_KEY_BOOK_PX, &book_px) == ESP_OK) s_book_px = valid_book_px(book_px);
     if (nvs_get_u8(h, NVS_KEY_BOOK_SHAKE, &book_shake) == ESP_OK) s_book_shake = book_shake != 0;
+    uint8_t line = 150, indent = 0, margin = 0;
+    if (nvs_get_u8(h, NVS_KEY_BOOK_LINE, &line) == ESP_OK) s_book_line_pct = valid_book_line(line);
+    if (nvs_get_u8(h, NVS_KEY_BOOK_INDENT, &indent) == ESP_OK) s_book_indent = valid_book_indent(indent);
+    if (nvs_get_u8(h, NVS_KEY_BOOK_MARGIN, &margin) == ESP_OK) s_book_margin = valid_book_margin(margin);
     nvs_close(h);
     ESP_LOGI(
         TAG, "sleep mode %s, font %s",
@@ -171,4 +195,37 @@ void app_settings_set_book_shake(bool on) {
     if (s_book_shake == on) return;
     s_book_shake = on;
     nvs_put_u8(NVS_KEY_BOOK_SHAKE, on ? 1 : 0);
+}
+
+uint8_t app_settings_book_line_pct(void) {
+    return s_book_line_pct;
+}
+
+void app_settings_set_book_line_pct(uint8_t pct) {
+    pct = valid_book_line(pct);
+    if (s_book_line_pct == pct) return;
+    s_book_line_pct = pct;
+    nvs_put_u8(NVS_KEY_BOOK_LINE, pct);
+}
+
+uint8_t app_settings_book_indent(void) {
+    return s_book_indent;
+}
+
+void app_settings_set_book_indent(uint8_t chars) {
+    chars = valid_book_indent(chars);
+    if (s_book_indent == chars) return;
+    s_book_indent = chars;
+    nvs_put_u8(NVS_KEY_BOOK_INDENT, chars);
+}
+
+uint8_t app_settings_book_margin(void) {
+    return s_book_margin;
+}
+
+void app_settings_set_book_margin(uint8_t step) {
+    step = valid_book_margin(step);
+    if (s_book_margin == step) return;
+    s_book_margin = step;
+    nvs_put_u8(NVS_KEY_BOOK_MARGIN, step);
 }

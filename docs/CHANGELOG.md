@@ -15,6 +15,16 @@ User-visible changes by date and author; Git retains implementation history. See
   Added: a Storage page (card status / remount / format, without the buzzer and probes) and a Settings page (default size, shake turn, lock mode, pickup wake, battery / build time / free storage).
 - 隐藏：设备功能自检不再出现在菜单，只由开机断电续跑与设置页长按「关于」标题进入；出厂 VCOM 标定页保持不变。
   Hidden: the device self-test leaves the menu and is reached only by the boot power-cut resume and a long press on the About heading in Settings; the factory VCOM setup page is unchanged.
+- 书签：正文工具条新增「存书签 / 删书签」，长按该按钮打开书签夹列表；书架条目与详情显示书签数量。书签锚在本页首字节偏移，改字号或行距重排后仍落回同一段；每本上限 32 条，清进度时一并清除。
+  Bookmarks: the reading toolbar gains Save/Delete bookmark, and holding that button opens the bookmark list; shelf rows and details show the count. A bookmark anchors to the page's first byte offset, so it returns to the same passage after re-layout at another font size or line height; up to 32 per book, cleared together with progress.
+- 排版可调：正文工具条增加「行距 −/+」，设置页可调行距（110–220%，步长 10）、首行缩进（0–4 字）与左右页边距（0–3 档，每档 20 px）；默认 150% / 0 / 0 与旧版排版逐字节一致，三项均写入 NVS。
+  Adjustable layout: the toolbar adds line-height −/+, and Settings adjusts line height (110–220% in steps of 10), first-line indent (0–4 characters) and side margins (0–3 steps of 20 px). The defaults 150% / 0 / 0 reproduce the previous layout byte-for-byte; all three persist in NVS.
+- 阅读统计：新增累计阅读时长、打开图书次数、本次开机时长与平均每次；只在正文阅读视图计时，超过 5 秒的间隔丢弃。书架详情与设置页第二页均可查看，清进度时一并清除。
+  Reading statistics: cumulative reading time, book-open count, this-boot time and per-open average; timed only in the reading view, dropping gaps longer than 5 s. Shown in shelf details and on the second Settings page, and cleared together with progress.
+- 设置页改为两页翻页（KEY1 / KEY3）：第一页「阅读偏好 · 睡眠」，第二页「关于 · 阅读统计」。
+  Settings becomes two pages (KEY1 / KEY3): "Reading · Sleep" and "About · Statistics".
+- 内建字体子集随源码裁剪重新生成，体积由 559 KB 降到 419 KB；顺带修正传书页一处旧字体缺字的破折号。
+  The built-in font subset is regenerated for the trimmed source, shrinking from 559 KB to 419 KB; a dash missing from the old font on the Transfer page is also fixed.
 
 ## 2026-09-28 · UNSaWEN
 

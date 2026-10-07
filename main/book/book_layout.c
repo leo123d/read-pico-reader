@@ -7,8 +7,10 @@
  *
  * 冻结：原文由调用方持有；字体测量和绘制必须由调用方串行化。
  * 为尽早进入阅读，支持分批分页；未加载图片绘制可点击占位及已读重复提示，不在绘图时读取资源或解码。
+ * 行距与首行缩进由 book_layout_set_style() 设定，默认 150% 与 0 与旧版排版逐字节一致。
  * Frozen: Caller owns source text and serializes all font measurement and drawing.
  * Incremental pagination enables early reading; unloaded images show clickable placeholders and visited-chapter repeat hints; never read or decode resources while drawing.
+ * book_layout_set_style() carries line height and first-line indent; the 150% / 0 defaults reproduce the legacy layout exactly.
  */
 #include "book_layout.h"
 #include <limits.h>
@@ -33,8 +35,29 @@ static size_t s_scan;
 static int64_t s_used;
 static bool s_complete;
 
+// 行距与缩进不随 free() 复位：free 会在每次重排开头被调用，样式必须由调用方一直持有。
+// Line height and indent survive free(): free runs at the head of every repagination, so the style must persist.
+static uint8_t s_line_pct = BOOK_LAYOUT_LINE_PCT_DEFAULT;
+static uint8_t s_indent_chars;
+static int s_indent_px;
+
 static const blk_t* s_blocks;
 static size_t s_block_count;
+
+void book_layout_set_style(uint8_t line_pct, uint8_t indent_chars) {
+    if (line_pct < BOOK_LAYOUT_LINE_PCT_MIN || line_pct > BOOK_LAYOUT_LINE_PCT_MAX)
+        line_pct = BOOK_LAYOUT_LINE_PCT_DEFAULT;
+    if (indent_chars > BOOK_LAYOUT_INDENT_MAX) indent_chars = BOOK_LAYOUT_INDENT_MAX;
+    s_line_pct = line_pct;
+    s_indent_chars = indent_chars;
+}
+
+// 段首行才缩进；段边界由前一个字节是否为换行判定，标题一律不缩进。
+// Only the first line of a paragraph is indented; the boundary is a preceding newline, and headings never indent.
+static int line_indent(size_t off, bool heading) {
+    if (!s_indent_px || heading) return 0;
+    return (off == 0 || s_text[off - 1] == '\n') ? s_indent_px : 0;
+}
 
 // 块表是有序字节区间，二分查找当前行样式。/ Blocks are ordered byte ranges; binary-search the line style.
 static const blk_t* block_at(size_t off) {
@@ -59,7 +82,9 @@ static void image_size(const blk_t* block, int* width, int* height) {
 static int row_height(const blk_t* block, int px) {
     if (block && block->image) { int width, height; image_size(block, &width, &height); return height; }
     if (block && block->image_src) return 2 * s_px < s_rect.height ? 2 * s_px : s_rect.height;
-    return px + px / 2;
+    // 行距百分比在 150 时等于旧的 px + px/2，逐像素一致。
+    // At 150 percent this equals the legacy px + px/2 exactly.
+    return (int)((int64_t)px * s_line_pct / 100);
 }
 static EpdRect placeholder_rect(EpdRect body, int top, int height) {
     int pad = body.width > 24 && height > 16 ? 8 : 0;
@@ -114,6 +139,7 @@ void book_layout_free(void) {
     s_scan = 0;
     s_used = 0;
     s_complete = false;
+    s_indent_px = 0;
     s_blocks = NULL;
     s_block_count = 0;
 }
@@ -136,6 +162,7 @@ static bool take_line(size_t off, size_t* next, bool* paragraph_end, int* px, bo
     const blk_t* block = block_at(off);
     *heading = block && block->heading;
     *px = s_px + (*heading ? 8 : 0);
+    int indent = line_indent(off, *heading);
     size_t limit = block ? block->offset + block->len : s_len;
     size_t end = off;
     int64_t width = 0;
@@ -156,7 +183,7 @@ static bool take_line(size_t off, size_t* next, bool* paragraph_end, int* px, bo
         glyph[n] = 0;
         int64_t candidate = width + ttf_text_width_px(*px, glyph);
         if (candidate < 0) return false;
-        if (candidate > s_rect.width) {
+        if (candidate > s_rect.width - indent) {
             if (end == off) return false;
             break;
         }
@@ -215,6 +242,10 @@ bool book_layout_begin_blocks(const char* utf8, size_t len, const blk_t* blocks,
     s_len = len;
     s_px = px;
     s_rect = rect;
+    // 缩进不能吃掉半行以上，否则短行会排不下；越界直接放弃缩进。
+    // Indent must not eat half a line or short lines stop fitting; drop it when it would.
+    s_indent_px = s_indent_chars * px;
+    if (s_indent_px * 2 >= rect.width) s_indent_px = 0;
     s_line = heap_caps_malloc(len + 1, PSRAM_CAPS);
     if (!s_line || !append_page(0)) goto fail;
     return book_layout_extend(2);
@@ -295,7 +326,8 @@ void book_layout_draw_page(uint8_t* fb, size_t page, EpdRect rect, int px) {
         } else if (block && block->image_src) {
             draw_placeholder(fb, block, placeholder_rect(rect, (int)used, line_height));
         } else if (s_line[0]) {
-            ttf_draw_text_px(fb, rect.x, rect.y + (int)used + ttf_ascender_px(line_px), line_px,
+            ttf_draw_text_px(fb, rect.x + line_indent(off, heading),
+                             rect.y + (int)used + ttf_ascender_px(line_px), line_px,
                              s_line, EPD_DRAW_ALIGN_LEFT, 0, 15);
         }
         used += line_height;
